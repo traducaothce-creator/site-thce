@@ -6,7 +6,7 @@
     <title>THCE - Tradução Histórica e Científica das Escrituras</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 0;
             text-align: center;
@@ -14,54 +14,74 @@
             color: #111;
         }
         header {
-            padding: 40px 20px 20px 20px;
+            padding: 50px 20px 30px 20px;
+            background-color: #ffffff;
+            border-bottom: 1px solid #ddd;
         }
         header h1 {
-            font-size: 2rem;
+            font-size: 2.2rem;
             margin-bottom: 10px;
+            color: #1a1a1a;
+        }
+        header p {
+            font-size: 1.1rem;
+            color: #666;
         }
         section {
-            margin: 30px 0;
+            margin: 40px 0;
             padding: 20px;
         }
         .edition {
             background: #fff;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            margin: 20px auto;
-            max-width: 500px;
-            padding: 25px 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin: 25px auto;
+            max-width: 550px;
+            padding: 30px 25px;
+            border: 1px solid #eaeaea;
         }
         .edition h2 {
-            font-size: 1.4rem;
-            margin-bottom: 10px;
+            font-size: 1.6rem;
+            margin-bottom: 5px;
         }
         .edition p {
-            margin: 10px 0;
-            color: #555;
+            margin: 5px 0 25px 0;
+            color: #777;
         }
         .buttons {
-            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
         }
         .buttons a {
             text-decoration: none;
             color: #fff;
             background-color: #111;
-            padding: 10px 18px;
+            padding: 12px 22px;
             border-radius: 8px;
-            margin: 0 5px;
             font-weight: bold;
-            transition: background 0.2s ease;
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
         .buttons a:hover {
             background-color: #333;
+            transform: translateY(-2px);
+        }
+        .btn-outline {
+            background-color: transparent !important;
+            color: #111 !important;
+            border: 1px solid #111;
+        }
+        .btn-outline:hover {
+            background-color: #f0f0f0 !important;
         }
     </style>
 </head>
 <body>
+
     <header>
         <h1>Tradução Histórica e Científica das Escrituras (THCE)</h1>
-        <p>Nova Tradução Brasileira – projeto independente de tradução bíblica</p>
+        <p>Nova Tradução Brasileira – Projeto Independente de Tradução Bíblica</p>
     </header>
 
     <section>
@@ -69,8 +89,8 @@
             <h2>Versão Mini Revisada</h2>
             <p>Publicada em 2026</p>
             <div class="buttons">
-                <a href="txtthce.html">Visualizar</a>
-                <a href="minirevisada.html">Sobre</a>
+                <a href="txtthce.html" id="btn-visualizar">Visualizar</a>
+                <a href="minirevisada.html" class="btn-outline">Sobre</a>
             </div>
         </div>
 
@@ -78,7 +98,7 @@
             <h2>Versão Mini Plus</h2>
             <p>Em desenvolvimento</p>
             <div class="buttons">
-                <a href="miniplus.html">Sobre</a>
+                <a href="miniplus.html" class="btn-outline">Sobre</a>
             </div>
         </div>
 
@@ -86,7 +106,7 @@
             <h2>Edição Completa</h2>
             <p>Em desenvolvimento</p>
             <div class="buttons">
-                <a href="thcecompleta.html">Sobre</a>
+                <a href="thcecompleta.html" class="btn-outline">Sobre</a>
             </div>
         </div>
 
@@ -94,9 +114,44 @@
             <h2>Versão Acadêmica</h2>
             <p>Em desenvolvimento</p>
             <div class="buttons">
-                <a href="acadêmica.html">Sobre</a>
+                <a href="acadêmica.html" class="btn-outline">Sobre</a>
             </div>
         </div>
     </section>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDk42xKzDR3LoZPg1NT5NxeLcgFVWqYVbU",
+            authDomain: "site-thce.firebaseapp.com",
+            projectId: "site-thce",
+            storageBucket: "site-thce.firebasestorage.app",
+            messagingSenderId: "948915266536",
+            appId: "1:948915266536:web:daf61b80b442c813a2ba5d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const docRef = doc(db, "estatisticas", "thce-mini");
+
+        const btn = document.getElementById("btn-visualizar");
+        btn.addEventListener("click", async (e) => {
+            e.preventDefault();
+            const linkDestino = btn.href;
+
+            try {
+                // O sistema continua registrando o acesso silenciosamente
+                await updateDoc(docRef, {
+                    views: increment(1)
+                });
+            } catch (error) {
+                console.error("Erro interno ao registrar acesso.");
+            } finally {
+                window.location.href = linkDestino;
+            }
+        });
+    </script>
 </body>
 </html>

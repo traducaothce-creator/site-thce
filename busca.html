@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THCE - Leitura por Capítulo</title>
+<style>
+    /* Estilos Gerais */
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f4f7f6;
+        color: #333;
+        line-height: 1.6;
+        margin: 0;
+        padding: 20px;
+    }
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: #ffffff;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+    h1 {
+        text-align: center;
+        color: #2c3e50;
+        border-bottom: 2px solid #4a90e2;
+        padding-bottom: 10px;
+    }
+    .controls {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin: 25px 0;
+        flex-wrap: wrap;
+    }
+    select, button {
+        padding: 10px 15px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        outline: none;
+        background-color: #fff;
+    }
+    .btn-principal {
+        background-color: #4a90e2;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    #resultado {
+        margin-top: 30px;
+        white-space: pre-wrap;
+        background: #fafafa;
+        padding: 25px;
+        border-left: 5px solid #4a90e2;
+        font-size: 17px;
+        border-radius: 4px;
+    }
+    .versiculo {
+        font-weight: bold;
+        color: #e74c3c;
+    }
+
+    /* Ajustes no Sistema de Notas (Modal) */
+    .btn-nota {
+        background-color: #e67e22;
+        color: white;
+        border: none;
+        padding: 4px 10px;
+        font-size: 14px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-left: 8px;
+        font-weight: bold;
+        vertical-align: middle;
+    }
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        padding: 20px;
+    }
+    .modal-content {
+        background: #fff;
+        padding: 30px;
+        border-radius: 12px;
+        max-width: 650px;
+        width: 100%;
+        /* Solução para textos grandes: */
+        max-height: 85vh; 
+        overflow-y: auto; 
+        position: relative;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .close-btn {
+        position: sticky;
+        top: -10px;
+        float: right;
+        background: #fff;
+        color: #333;
+        font-size: 28px;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        z-index: 10;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>THCE - Leitura das Escrituras</h1>
+
+    <div class="controls">
+        <select id="livro" onchange="atualizarCapitulos()">
+            <option value="">Selecione um Livro...</option>
+        </select>
+        <select id="capitulo">
+            <option value="">Selecione o Capítulo...</option>
+        </select>
+        <button class="btn-principal" onclick="mostrarCapitulo()">Ler Capítulo</button>
+    </div>
+
+    <div id="resultado">Carregando dados...</div>
+</div>
+
+<div class="modal-overlay" id="modalNota" onclick="fecharModalFora(event)">
+    <div class="modal-content">
+        <button class="close-btn" onclick="fecharModal()">×</button>
+        <h3 style="margin-top:0; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 10px;">Nota de Estudo</h3>
+        <div id="conteudoNota" style="white-space: pre-wrap; font-size: 16px; color: #444;"></div>
+    </div>
+</div>
+
+<script>
+let biblia = {};
+let notasDoCapitulo = "";
+
+fetch("livro.txt")
+    .then(r => r.text())
+    .then(data => {
+        processarTexto(data);
+        preencherLivros();
+        document.getElementById("resultado").innerText = "Pronto para leitura.";
+    });
+
+function processarTexto(raw) {
+    // Limpeza de caracteres indesejados
+    let texto = raw.replace(/\/r/g, "").replace(/\\r/g, "").replace(/\r/g, "");
+    
+    // RegEx para identificar o início de cada livro
+    const regexLivros = /^(Provérbios|Eclesiastes|Mateus|1 João|2 João|3 João|João|Romanos|Gálatas|Efésios|Tiago)\s*\n+(?:\1)\s*\n+/gm;
+    let partes = texto.split(regexLivros);
+
+    for (let i = 1; i < partes.length; i += 2) {
+        let nome = partes[i].trim();
+        let conteudo = partes[i+1];
+        biblia[nome] = {};
+
+        const regexCaps = /^.*?Cap[ií]tulo\s+(\d+).*$/gim;
+        let caps = conteudo.split(regexCaps);
+
+        for (let j = 1; j < caps.length; j += 2) {
+            biblia[nome][caps[j]] = caps[j+1].trim();
+        }
+    }
+}
+
+function preencherLivros() {
+    let sel = document.getElementById("livro");
+    for (let l in biblia) {
+        let o = document.createElement("option");
+        o.value = l; o.textContent = l;
+        sel.appendChild(o);
+    }
+}
+
+function atualizarCapitulos() {
+    let l = document.getElementById("livro").value;
+    let c = document.getElementById("capitulo");
+    c.innerHTML = '<option value="">Capítulo...</option>';
+    if(biblia[l]) {
+        Object.keys(biblia[l]).sort((a,b)=>a-b).forEach(n => {
+            let o = document.createElement("option");
+            o.value = n; o.textContent = "Capítulo " + n;
+            c.appendChild(o);
+        });
+    }
+}
+
+function mostrarCapitulo() {
+    let l = document.getElementById("livro").value;
+    let n = document.getElementById("capitulo").value;
+    let res = document.getElementById("resultado");
+
+    if(!biblia[l] || !biblia[l][n]) return;
+
+    let bruto = biblia[l][n];
+    
+    // Separa as Notas do texto principal
+    let partes = bruto.split(/(?=\n\s*Notas?:|\n\s*Nota sugerida\s*-)/i);
+    let textoEscritura = partes[0];
+    notasDoCapitulo = partes.length > 1 ? partes.slice(1).join("\n").trim() : "Sem notas adicionais.";
+
+    // Processa versículos e botões de nota
+    let formatado = textoEscritura.split('\n').map(linha => {
+        linha = linha.replace(/\[.*?nota.*?\]/gi, `<button class="btn-nota" onclick="abrirModal()">📖 Nota</button>`);
+        linha = linha.replace(/^(\d+)\s/, '<span class="versiculo">$1</span> ');
+        return linha;
+    }).join('\n');
+
+    res.innerHTML = `<h2>${l} ${n}</h2>` + formatado;
+}
+
+function abrirModal() {
+    document.getElementById("conteudoNota").innerText = notasDoCapitulo;
+    document.getElementById("modalNota").style.display = "flex";
+}
+
+function fecharModal() {
+    document.getElementById("modalNota").style.display = "none";
+}
+
+function fecharModalFora(e) {
+    if(e.target.id === "modalNota") fecharModal();
+}
+</script>
+</body>
+</html>
